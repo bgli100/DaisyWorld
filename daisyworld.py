@@ -2,12 +2,21 @@ import argparse
 import random
 import math
 
+# consts in original model
 GRID_LEN = 28
 AGE_LIMIT = 25
 DIFFUSE_RATIO = 0.5
+# for convenience in neighbour search
 NEIGHBOURS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
 
+# please notice that the data structure of patch is a 3-tuple:
+# (str: type, float: temperature, int/None: age)
+# type should be chosen from "black" "white" and "empty"
+# temperature is the current patch temperature
+# age is the current age of daisies in ticks, leave it as None for empty patches
 
+
+# functions that checks input
 def start_ratio_type(x):
     x = int(x)
     if x < 0 or x > 50:
@@ -37,6 +46,7 @@ def ticks_type(x):
 
 
 def get_options():
+    # setup arguments
     parser = argparse.ArgumentParser(
         prog="daisyworld.py",
         add_help=False,
@@ -76,6 +86,7 @@ def get_options():
 def init(options):
     grid_size = GRID_LEN * GRID_LEN
 
+    # init a grid with all empty patches
     grid = []
     for i in range(0, GRID_LEN):
         row = []
@@ -83,6 +94,8 @@ def init(options):
             row.append(("empty", 0, None))
         grid.append(row)
 
+    # sprout some white daisies in empty patches.
+    # leave temperature as 0, will init it later
     num_of_white = int(options.white_ratio * grid_size / 100)
     for i in range(0, num_of_white):
         while True:
@@ -91,6 +104,7 @@ def init(options):
             if patch_type == "empty":
                 break
         grid[x][y] = ("white", 0, random.randint(0, AGE_LIMIT))
+    # do the same for black
     num_of_black = int(options.black_ratio * grid_size / 100)
     for i in range(0, num_of_black):
         while True:
@@ -99,12 +113,15 @@ def init(options):
             if patch_type == "empty":
                 break
         grid[x][y] = ("black", 0, random.randint(0, AGE_LIMIT))
-
+    # set the initial temperature for patches
     update_temperature(grid, options, options.solar_luminosity)
     return grid
 
 
 def update_temperature(grid, options, luminosity):
+    # update temperature for absorbed luminosity only.
+    # should be called once before the first tick
+    # be aware that you need to call diffuse_temperature() after this in every tick
     for i in range(0, GRID_LEN):
         for j in range(0, GRID_LEN):
             patch_type, patch_temp, patch_age = grid[i][j]
@@ -122,6 +139,15 @@ def update_temperature(grid, options, luminosity):
 
 
 def diffuse_temperature(grid):
+    # temperature diffuses to neighbour patches (usually 8 neighbours,
+    # may be 5 or 3 in edges or corners).
+
+    # 1/16 of the temperature this patch will go to every neighbour.
+    # if this patch has 8 neighbours, a total of 1/2 will be diffused.
+    # But it also receives 8 portion of heat in return.
+
+    # using a temporary grid since changing temperatures in nested loop
+    # will mess things up.
     temp_grid = []
     for i in range(0, GRID_LEN):
         temp_row = []
@@ -132,10 +158,10 @@ def diffuse_temperature(grid):
                 neighbors = 5
             else:
                 neighbors = 8
-
+            # lose diffused heat
             _, t, _ = grid[i][j]
             t = t * (1 - (neighbors / 8 * DIFFUSE_RATIO))
-
+            # receive diffused heat
             for patch in NEIGHBOURS:
                 diff_i, diff_j = patch
                 if 0 <= i + diff_i < GRID_LEN and 0 <= j + diff_j < GRID_LEN:
@@ -143,7 +169,7 @@ def diffuse_temperature(grid):
 
             temp_row.append(t)
         temp_grid.append(temp_row)
-
+    # apply the predicted temperatures in temporary grid to real grid
     for i in range(0, GRID_LEN):
         for j in range(0, GRID_LEN):
             patch_type, _, patch_age = grid[i][j]
@@ -151,6 +177,7 @@ def diffuse_temperature(grid):
 
 
 def get_global_temperature(grid):
+    # global temperature is the average of all patch temperatures
     total = 0
     for i in range(0, GRID_LEN):
         for j in range(0, GRID_LEN):
@@ -161,6 +188,7 @@ def get_global_temperature(grid):
 
 
 def get_population(grid):
+    # how is my garden?
     white = 0
     black = 0
     for i in range(0, GRID_LEN):
@@ -174,12 +202,14 @@ def get_population(grid):
 
 
 def write_log_line(fp, grid, luminosity, tick):
+    # write a line of log in csv format
     temp = get_global_temperature(grid)
     white, black = get_population(grid)
     fp.write("{},{},{},{},{}\n".format(tick, white, black, luminosity, temp))
 
 
 def check_survivability(grid):
+    # dealing with age, death and reproduce of daisies
     for i in range(0, GRID_LEN):
         for j in range(0, GRID_LEN):
             patch_type, patch_temp, patch_age = grid[i][j]
@@ -188,13 +218,16 @@ def check_survivability(grid):
                 continue
             if patch_type != "empty":
                 patch_age += 1
+                # if old enough, die.
                 if patch_age > AGE_LIMIT:
                     grid[i][j] = ("empty", patch_temp, None)
                     continue
+                # if still alive, then it has a chance to reproduce
                 grid[i][j] = (patch_type, patch_temp, patch_age)
                 seed_threshold = 0.1457 * patch_temp - 0.0032 * (patch_temp ** 2) - 0.6443
                 if random.random() < seed_threshold:
                     has_space = False
+                    # is there an empty patch in neighbours?
                     for p in NEIGHBOURS:
                         diff_i, diff_j = p
                         if 0 <= i + diff_i < GRID_LEN and 0 <= j + diff_j < GRID_LEN:
@@ -210,6 +243,7 @@ def check_survivability(grid):
                                 # age of new babies will be inited afterwards
                                 grid[i + diff_i][j + diff_j] = (patch_type, temp, -1)
                                 break
+    # give new babies an age of 0
     for i in range(0, GRID_LEN):
         for j in range(0, GRID_LEN):
             patch_type, patch_temp, patch_age = grid[i][j]
@@ -220,20 +254,26 @@ def check_survivability(grid):
 def main():
     options = get_options()
     grid = init(options)
+    # luminosity may actively change in some mode, so do not only
+    # rely on the value in options. it's just the init value
     luminosity = options.solar_luminosity
+    # i'm lazy, no access checking or something
     fp = open("output.csv", "w+")
+    # the head of the csv file
     fp.write("tick,white population,black population,luminosity,global temperature\n")
     write_log_line(fp, grid, luminosity, 0)
     for i in range(1, options.ticks + 1):
+        # please notice the order of those steps in each tick
         update_temperature(grid, options, luminosity)
         diffuse_temperature(grid)
         check_survivability(grid)
         write_log_line(fp, grid, luminosity, i)
 
-        if 200 < i <= 400:
-            luminosity += 0.005
-        elif 600 < i <= 850:
-            luminosity -= 0.0025
+        if options.mode == "ramp-up-ramp-down":
+            if 200 < i <= 400:
+                luminosity += 0.005
+            elif 600 < i <= 850:
+                luminosity -= 0.0025
 
     fp.close()
 
