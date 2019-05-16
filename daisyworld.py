@@ -46,6 +46,7 @@ def ticks_type(x):
     return x
 
 def pollution_type(x):
+    x = float(x)
     if x < 0 or x > MAXIMUM_POLLUTION:
         raise argparse.ArgumentTypeError("pollution amount must be float in range [0,10]")
     return x
@@ -85,6 +86,9 @@ def get_options():
                       type=str,
                       choices=["ramp-up-ramp-down", "default"],
                       default="default", help="mode of luminosity")
+    args.add_argument('--pollution', metavar="pollution-level", 
+                      type=pollution_type, default=0,
+                      help = "level of pollution")
     ret = parser.parse_args()
     return ret
 
