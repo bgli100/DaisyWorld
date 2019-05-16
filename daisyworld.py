@@ -8,6 +8,7 @@ AGE_LIMIT = 25
 DIFFUSE_RATIO = 0.5
 # for convenience in neighbour search
 NEIGHBOURS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+MAXIMUM_POLLUTION = 10
 
 # please notice that the data structure of patch is a 3-tuple:
 # (str: type, float: temperature, int/None: age)
@@ -42,6 +43,11 @@ def ticks_type(x):
     x = int(x)
     if x < 1:
         raise argparse.ArgumentTypeError("tick count of simulation must be int in range [1,+inf)")
+    return x
+
+def pollution_type(x):
+    if x < 0 or x > MAXIMUM_POLLUTION:
+        raise argparse.ArgumentTypeError("pollution amount must be float in range [0,10]")
     return x
 
 
