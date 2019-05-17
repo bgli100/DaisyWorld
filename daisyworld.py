@@ -49,7 +49,7 @@ def ticks_type(x):
 def pollution_type(x):
     x = float(x)
     if x < 0 or x > MAXIMUM_POLLUTION:
-        raise argparse.ArgumentTypeError("pollution amount must be float in range [0," + str(MAXIMUM_POLLUTION)"]")
+        raise argparse.ArgumentTypeError("pollution amount must be float in range [0," + str(MAXIMUM_POLLUTION) + "]")
     return x
 
 
@@ -272,13 +272,9 @@ def main():
     # rely on the value in options. it's just the init value
     luminosity = options.solar_luminosity
     pollution = options.pollution
-
-    print("the specified pollution amount is: " + str(options.pollution))
-
     # i'm lazy, no access checking or something
     fp = open("output.csv", "w+")
     # the head of the csv file
-    # TODO: Remove below print statement
     fp.write("tick,white population,black population,luminosity,global temperature\n")
     write_log_line(fp, grid, luminosity, 0)
     for i in range(1, options.ticks + 1):
