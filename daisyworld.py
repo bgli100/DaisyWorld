@@ -264,10 +264,6 @@ def check_survivability(grid, pollution):
             if patch_type != "empty" and patch_age == -1:
                 grid[i][j] = (patch_type, patch_temp, 0)
 
-
-#TODO: Delete this later, replace the global variable
-pollution_global = get_options().pollution
-
 def main():
     options = get_options()
     grid = init(options)
