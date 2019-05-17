@@ -48,7 +48,7 @@ def ticks_type(x):
 def pollution_type(x):
     x = float(x)
     if x < 0 or x > MAXIMUM_POLLUTION:
-        raise argparse.ArgumentTypeError("pollution amount must be float in range [0,10]")
+        raise argparse.ArgumentTypeError("pollution amount must be float in range [0," + str(MAXIMUM_POLLUTION)"]")
     return x
 
 
