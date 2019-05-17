@@ -218,7 +218,7 @@ def write_log_line(fp, grid, luminosity, tick):
     fp.write("{},{},{},{},{}\n".format(tick, white, black, luminosity, temp))
 
 
-def check_survivability(grid):
+def check_survivability(grid, pollution):
     # dealing with age, death and reproduce of daisies
     for i in range(0, GRID_LEN):
         for j in range(0, GRID_LEN):
@@ -227,8 +227,8 @@ def check_survivability(grid):
             if patch_age == -1:
                 continue
             if patch_type != "empty":
-                if pollution_global != 0:
-                    if random.randint(0,10) <= pollution_global:
+                if pollution != 0:
+                    if random.randint(0,10) <= pollution:
                         # age the patch an extra amount 
                         patch_age += 10
                 patch_age += 1
@@ -274,6 +274,7 @@ def main():
     # luminosity may actively change in some mode, so do not only
     # rely on the value in options. it's just the init value
     luminosity = options.solar_luminosity
+    pollution = options.pollution
 
     print("the specified pollution amount is: " + str(options.pollution))
 
@@ -287,7 +288,7 @@ def main():
         # please notice the order of those steps in each tick
         update_temperature(grid, options, luminosity)
         diffuse_temperature(grid)
-        check_survivability(grid)
+        check_survivability(grid, pollution)
         write_log_line(fp, grid, luminosity, i)
 
         if options.mode == "ramp-up-ramp-down":
