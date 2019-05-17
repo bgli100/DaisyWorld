@@ -9,6 +9,7 @@ DIFFUSE_RATIO = 0.5
 # for convenience in neighbour search
 NEIGHBOURS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
 MAXIMUM_POLLUTION = 10
+POLLUTION_AGE_INCREMENT = 3 # TODO: consider changing this to an argument?
 
 # please notice that the data structure of patch is a 3-tuple:
 # (str: type, float: temperature, int/None: age)
@@ -230,7 +231,7 @@ def check_survivability(grid, pollution):
                 if pollution != 0:
                     if random.randint(0,MAXIMUM_POLLUTION) <= pollution:
                         # age the patch more than usual
-                        patch_age += 3
+                        patch_age += POLLUTION_AGE_INCREMENT
                 patch_age += 1
                 # if old enough, die.
                 if patch_age > AGE_LIMIT:
