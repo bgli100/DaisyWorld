@@ -227,6 +227,10 @@ def check_survivability(grid):
             if patch_age == -1:
                 continue
             if patch_type != "empty":
+                if pollution_global != 0:
+                    if random.randint(0,10) <= pollution_global:
+                        # age the patch an extra amount 
+                        patch_age += 10
                 patch_age += 1
                 # if old enough, die.
                 if patch_age > AGE_LIMIT:
@@ -261,15 +265,22 @@ def check_survivability(grid):
                 grid[i][j] = (patch_type, patch_temp, 0)
 
 
+#TODO: Delete this later, replace the global variable
+pollution_global = get_options().pollution
+
 def main():
     options = get_options()
     grid = init(options)
     # luminosity may actively change in some mode, so do not only
     # rely on the value in options. it's just the init value
     luminosity = options.solar_luminosity
+
+    print("the specified pollution amount is: " + str(options.pollution))
+
     # i'm lazy, no access checking or something
     fp = open("output.csv", "w+")
     # the head of the csv file
+    # TODO: Remove below print statement
     fp.write("tick,white population,black population,luminosity,global temperature\n")
     write_log_line(fp, grid, luminosity, 0)
     for i in range(1, options.ticks + 1):
@@ -290,3 +301,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
