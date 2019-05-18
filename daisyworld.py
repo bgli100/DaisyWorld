@@ -9,7 +9,8 @@ DIFFUSE_RATIO = 0.5
 # for convenience in neighbour search
 NEIGHBOURS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
 MAXIMUM_POLLUTION = 10
-POLLUTION_AGE_INCREMENT = 3 # TODO: consider changing this to an argument?
+MAXIMUM_POLLUTION_TOXICITY = 20
+DEFAULT_POLLUTION_TOXICITY = 4
 
 # please notice that the data structure of patch is a 3-tuple:
 # (str: type, float: temperature, int/None: age)
@@ -52,6 +53,12 @@ def pollution_type(x):
         raise argparse.ArgumentTypeError("pollution amount must be float in range [0," + str(MAXIMUM_POLLUTION) + "]")
     return x
 
+def pollution_toxicity_type(x):
+    x = float(x)
+    if x < 0 or x > MAXIMUM_POLLUTION_TOXICITY:
+        raise argparse.ArgumentTypeError("toxicity amount must be float in range [0," + str(MAXIMUM_POLLUTION_TOXICITY) + "]")
+    return x
+
 
 def get_options():
     # setup arguments
@@ -90,6 +97,9 @@ def get_options():
     args.add_argument('--pollution', metavar="pollution-level", 
                       type=pollution_type, default=0,
                       help = "level of pollution")
+    args.add_argument('--pollution-toxicity', metavar="pollution-toxicity", 
+                      type=pollution_toxicity_type, default=DEFAULT_POLLUTION_TOXICITY,
+                      help = "toxicity of pollution")
     ret = parser.parse_args()
     return ret
 
@@ -219,7 +229,7 @@ def write_log_line(fp, grid, luminosity, tick):
     fp.write("{},{},{},{},{}\n".format(tick, white, black, luminosity, temp))
 
 
-def check_survivability(grid, pollution):
+def check_survivability(grid, pollution, toxicity):
     # dealing with age, death and reproduce of daisies
     for i in range(0, GRID_LEN):
         for j in range(0, GRID_LEN):
@@ -231,7 +241,7 @@ def check_survivability(grid, pollution):
                 if pollution != 0:
                     if random.randint(1,MAXIMUM_POLLUTION) <= pollution:
                         # age the patch more than usual
-                        patch_age += POLLUTION_AGE_INCREMENT
+                        patch_age += toxicity
                 patch_age += 1
                 # if old enough, die.
                 if patch_age > AGE_LIMIT:
@@ -272,7 +282,8 @@ def main():
     # rely on the value in options. it's just the init value
     luminosity = options.solar_luminosity
     pollution = options.pollution
-    # i'm lazy, no access checking or something
+    toxicity = options.pollution_toxicity
+    # i'm lazy, no access checking or something 
     fp = open("output.csv", "w+")
     # the head of the csv file
     fp.write("tick,white population,black population,luminosity,global temperature\n")
@@ -281,7 +292,7 @@ def main():
         # please notice the order of those steps in each tick
         update_temperature(grid, options, luminosity)
         diffuse_temperature(grid)
-        check_survivability(grid, pollution)
+        check_survivability(grid, pollution, toxicity)
         write_log_line(fp, grid, luminosity, i)
 
         if options.mode == "ramp-up-ramp-down":
