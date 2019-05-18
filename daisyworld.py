@@ -229,7 +229,7 @@ def check_survivability(grid, pollution):
                 continue
             if patch_type != "empty":
                 if pollution != 0:
-                    if random.randint(0,MAXIMUM_POLLUTION) <= pollution:
+                    if random.randint(1,MAXIMUM_POLLUTION) <= pollution:
                         # age the patch more than usual
                         patch_age += POLLUTION_AGE_INCREMENT
                 patch_age += 1
