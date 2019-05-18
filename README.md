@@ -8,7 +8,7 @@ python daisyworld.py [--white-ratio start-%-whites]
                      [--surface-albedo albedo-of-surface]
                      [--solar-luminosity solar-luminosity] [--ticks ticks]
                      [--pollution level-of-pollution]
-		     [--pollution-toxicity toxicity-of-polution]
+		     [--pollution-toxicity toxicity-of-pollution]
                      [--mode "default" or "ramp-up-ramp-down"]
 
 
