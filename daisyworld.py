@@ -3,7 +3,7 @@ import random
 import math
 
 # consts in original model
-GRID_LEN = 28
+GRID_LEN = 29
 AGE_LIMIT = 25
 DIFFUSE_RATIO = 0.5
 # for convenience in neighbour search
