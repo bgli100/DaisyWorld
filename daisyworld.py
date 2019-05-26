@@ -2,9 +2,11 @@ import argparse
 import random
 import math
 
-# consts in original model
+# the length and height of the grid, since it is a square one
 GRID_LEN = 29
+# the age limit of daisies
 AGE_LIMIT = 25
+# how many heat where diffused to neighbor patches
 DIFFUSE_RATIO = 0.5
 # for convenience in neighbour search
 NEIGHBOURS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
@@ -14,10 +16,12 @@ NEIGHBOURS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 
 # type should be chosen from "black" "white" and "empty"
 # temperature is the current patch temperature
 # age is the current age of daisies in ticks, leave it as None for empty patches
+#
+# this comment belongs to here since patch is used in multiple methods.
 
 
-# functions that checks input
 def start_ratio_type(x):
+    # checks is start ratio of daisies valid
     x = int(x)
     if x < 0 or x > 50:
         raise argparse.ArgumentTypeError("start % of daisy must be int in range [0,50]")
@@ -25,6 +29,7 @@ def start_ratio_type(x):
 
 
 def albedo_type(x):
+    # checks is the albedo valid
     x = float(x)
     if x < 0 or x >= 1:
         raise argparse.ArgumentTypeError("albedo must be float in range [0,1)")
@@ -32,6 +37,7 @@ def albedo_type(x):
 
 
 def luminosity_type(x):
+    # checks is the luminosity valid
     x = float(x)
     if x <= 0 or x > 3:
         raise argparse.ArgumentTypeError("luminosity must be float in range (0,3]")
@@ -39,6 +45,7 @@ def luminosity_type(x):
 
 
 def ticks_type(x):
+    # checks is ticks limit valid
     x = int(x)
     if x < 1:
         raise argparse.ArgumentTypeError("tick count of simulation must be int in range [1,+inf)")
@@ -46,7 +53,7 @@ def ticks_type(x):
 
 
 def get_options():
-    # setup arguments
+    # sets up config values, and read values from command line arguments
     parser = argparse.ArgumentParser(
         prog="daisyworld.py",
         add_help=False,
@@ -84,6 +91,11 @@ def get_options():
 
 
 def init(options):
+    # do the setup job before the model really runs.
+    # including creation of the grid, sprout inital population of daisies,
+    # setup inital temperatures of each patch.
+    # the "options" parameter should be the result of get_options() function
+    
     grid_size = GRID_LEN * GRID_LEN
 
     # init a grid with all empty patches
@@ -188,7 +200,10 @@ def get_global_temperature(grid):
 
 
 def get_population(grid):
-    # how is my garden?
+    # how is my garden? 
+    # 
+    # counts the population of the grid, 
+    # and output a 2-tuple of (white_population, black_population)
     white = 0
     black = 0
     for i in range(0, GRID_LEN):
@@ -252,6 +267,7 @@ def check_survivability(grid):
 
 
 def main():
+    # the main body of the script, all jobs start here.
     options = get_options()
     grid = init(options)
     # luminosity may actively change in some mode, so do not only
@@ -270,6 +286,7 @@ def main():
         write_log_line(fp, grid, luminosity, i)
 
         if options.mode == "ramp-up-ramp-down":
+            # in this mode, luminosity changes over time.
             if 200 < i <= 400:
                 luminosity += 0.005
             elif 600 < i <= 850:
