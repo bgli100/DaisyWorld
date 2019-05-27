@@ -1,6 +1,7 @@
 import argparse
 import random
 import math
+import copy
 
 # the length and height of the grid, since it is a square one
 GRID_LEN = 29
@@ -10,6 +11,8 @@ AGE_LIMIT = 25
 DIFFUSE_RATIO = 0.5
 # for convenience in neighbour search
 NEIGHBOURS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+# a random queue of coords in grid, will be inited at the begining
+GRID_QUEUE = []
 
 # please notice that the data structure of patch is a 3-tuple:
 # (str: type, float: temperature, int/None: age)
@@ -99,11 +102,13 @@ def init(options):
     grid_size = GRID_LEN * GRID_LEN
 
     # init a grid with all empty patches
+    # and also init our queue of the grid
     grid = []
     for i in range(0, GRID_LEN):
         row = []
         for j in range(0, GRID_LEN):
             row.append(("empty", 0, None))
+            GRID_QUEUE.append((i, j))
         grid.append(row)
 
     # sprout some white daisies in empty patches.
@@ -116,8 +121,8 @@ def init(options):
             if patch_type == "empty":
                 break
         grid[x][y] = ("white", 0, random.randint(0, AGE_LIMIT))
-    # do the same for black
-    num_of_black = int(options.black_ratio * grid_size / 100)
+    # do the same for black, but round up
+    num_of_black = math.ceil(options.black_ratio * grid_size / 100)
     for i in range(0, num_of_black):
         while True:
             x, y = random.randint(0, GRID_LEN-1), random.randint(0, GRID_LEN-1)
@@ -225,45 +230,54 @@ def write_log_line(fp, grid, luminosity, tick):
 
 def check_survivability(grid):
     # dealing with age, death and reproduce of daisies
-    for i in range(0, GRID_LEN):
-        for j in range(0, GRID_LEN):
-            patch_type, patch_temp, patch_age = grid[i][j]
-            # age of -1 is new baby, and they should not age or reproduce until next tick
-            if patch_age == -1:
+    for i, j in get_random_queue():
+        patch_type, patch_temp, patch_age = grid[i][j]
+        # age of -1 is new baby, and they should not age or reproduce until next tick
+        if patch_age == -1:
+            continue
+        if patch_type != "empty":
+            patch_age += 1
+            # if old enough, die.
+            if patch_age > AGE_LIMIT:
+                grid[i][j] = ("empty", patch_temp, None)
                 continue
-            if patch_type != "empty":
-                patch_age += 1
-                # if old enough, die.
-                if patch_age > AGE_LIMIT:
-                    grid[i][j] = ("empty", patch_temp, None)
-                    continue
-                # if still alive, then it has a chance to reproduce
-                grid[i][j] = (patch_type, patch_temp, patch_age)
-                seed_threshold = 0.1457 * patch_temp - 0.0032 * (patch_temp ** 2) - 0.6443
-                if random.random() < seed_threshold:
-                    has_space = False
-                    # is there an empty patch in neighbours?
-                    for p in NEIGHBOURS:
-                        diff_i, diff_j = p
-                        if 0 <= i + diff_i < GRID_LEN and 0 <= j + diff_j < GRID_LEN:
-                            if grid[i + diff_i][j + diff_j][0] == "empty":
-                                has_space = True
-                    # if there is, pick a empty patch randomly
-                    if has_space:
-                        while True:
-                            diff_i, diff_j = NEIGHBOURS[random.randint(0, len(NEIGHBOURS) - 1)]
-                            if 0 <= i + diff_i < GRID_LEN and 0 <= j + diff_j < GRID_LEN and \
-                               grid[i + diff_i][j + diff_j][0] == "empty":
-                                temp = grid[i + diff_i][j + diff_j][1]
-                                # age of new babies will be inited afterwards
-                                grid[i + diff_i][j + diff_j] = (patch_type, temp, -1)
-                                break
+            # if still alive, then it has a chance to reproduce
+            grid[i][j] = (patch_type, patch_temp, patch_age)
+            seed_threshold = 0.1457 * patch_temp - 0.0032 * (patch_temp ** 2) - 0.6443
+            if random.random() < seed_threshold:
+                has_space = False
+                # is there an empty patch in neighbours?
+                for p in NEIGHBOURS:
+                    diff_i, diff_j = p
+                    if 0 <= i + diff_i < GRID_LEN and 0 <= j + diff_j < GRID_LEN:
+                        if grid[i + diff_i][j + diff_j][0] == "empty":
+                            has_space = True
+                # if there is, pick a empty patch randomly
+                if has_space:
+                    for diff_i, diff_j in get_random_queue("neighbours"):
+                        if 0 <= i + diff_i < GRID_LEN and 0 <= j + diff_j < GRID_LEN and \
+                           grid[i + diff_i][j + diff_j][0] == "empty":
+                            temp = grid[i + diff_i][j + diff_j][1]
+                            # age of new babies will be inited afterwards
+                            grid[i + diff_i][j + diff_j] = (patch_type, temp, -1)
+                            break
     # give new babies an age of 0
     for i in range(0, GRID_LEN):
         for j in range(0, GRID_LEN):
             patch_type, patch_temp, patch_age = grid[i][j]
             if patch_type != "empty" and patch_age == -1:
                 grid[i][j] = (patch_type, patch_temp, 0)
+                
+                
+def get_random_queue(type="grid"):
+    # returns a random queue, ensures all patches
+    # were treated equally
+    if type == "grid":
+        arr = GRID_QUEUE
+    else:  # neighbours
+        arr = NEIGHBOURS
+    random.shuffle(arr)
+    return arr
 
 
 def main():
