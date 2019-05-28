@@ -3,7 +3,7 @@ import random
 import math
 import copy
 
-# consts in original model
+# length and height of the grid since it is a square one
 GRID_LEN = 29
 AGE_LIMIT = 25
 DIFFUSE_RATIO = 0.5
@@ -12,7 +12,7 @@ NEIGHBOURS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 
 MAXIMUM_POLLUTION = 10
 MAXIMUM_POLLUTION_TOXICITY = 20
 DEFAULT_POLLUTION_TOXICITY = 4
-
+# random queue of coords in grid, will be inited at the begining
 GRID_QUEUE = []
 
 # please notice that the data structure of patch is a 3-tuple:
@@ -24,6 +24,7 @@ GRID_QUEUE = []
 
 # functions that checks input
 def start_ratio_type(x):
+    # check start ratio valid
     x = int(x)
     if x < 0 or x > 50:
         raise argparse.ArgumentTypeError("start % of daisy must be int in range [0,50]")
@@ -31,6 +32,7 @@ def start_ratio_type(x):
 
 
 def albedo_type(x):
+    # check albedo valid
     x = float(x)
     if x < 0 or x >= 1:
         raise argparse.ArgumentTypeError("albedo must be float in range [0,1)")
@@ -38,6 +40,7 @@ def albedo_type(x):
 
 
 def luminosity_type(x):
+    # check luminosity valid
     x = float(x)
     if x <= 0 or x > 3:
         raise argparse.ArgumentTypeError("luminosity must be float in range (0,3]")
@@ -45,18 +48,21 @@ def luminosity_type(x):
 
 
 def ticks_type(x):
+    # check ticks valid
     x = int(x)
     if x < 1:
         raise argparse.ArgumentTypeError("tick count of simulation must be int in range [1,+inf)")
     return x
 
 def pollution_type(x):
+    # check pollution valid
     x = float(x)
     if x < 0 or x > MAXIMUM_POLLUTION:
         raise argparse.ArgumentTypeError("pollution amount must be float in range [0," + str(MAXIMUM_POLLUTION) + "]")
     return x
 
 def pollution_toxicity_type(x):
+    # check toxicity valid
     x = float(x)
     if x < 0 or x > MAXIMUM_POLLUTION_TOXICITY:
         raise argparse.ArgumentTypeError("toxicity amount must be float in range [0," + str(MAXIMUM_POLLUTION_TOXICITY) + "]")
@@ -108,6 +114,9 @@ def get_options():
 
 
 def init(options):
+    # do the setup job before the model really runs
+    # including creation of the grid, sprout initial poulations of daisies, set temp
+    # the options parameter should be the result of get_options() function
     grid_size = GRID_LEN * GRID_LEN
 
     # init a grid with all empty patches
