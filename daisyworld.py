@@ -239,7 +239,7 @@ def check_survivability(grid, pollution, toxicity):
     # dealing with age, death and reproduce of daisies
     for i, j in get_random_queue():
         patch_type, patch_temp, patch_age = grid[i][j]
-        if patch_age == -1
+        if patch_age == -1:
             continue
         if patch_type != "empty":
             if pollution != 0:
