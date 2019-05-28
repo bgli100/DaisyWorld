@@ -122,7 +122,7 @@ def init(options):
                 break
         grid[x][y] = ("white", 0, random.randint(0, AGE_LIMIT))
     # do the same for black, but round up
-    num_of_black = math.ceil(options.black_ratio * grid_size / 100)
+    num_of_black = int(math.ceil(options.black_ratio * grid_size / 100))
     for i in range(0, num_of_black):
         while True:
             x, y = random.randint(0, GRID_LEN-1), random.randint(0, GRID_LEN-1)
