@@ -122,7 +122,6 @@ def init(options):
     # sprout some white daisies in empty patches.
     # leave temperature as 0, will init it later
     num_of_white = int(options.white_ratio * grid_size / 100)
-    num_of_black = int(math.ceil(options.black_ratio * grid_size / 100))
 
     for i in range(0, num_of_white):
         while True:
@@ -132,7 +131,7 @@ def init(options):
                 break
         grid[x][y] = ("white", 0, random.randint(0, AGE_LIMIT))
     # do the same for black
-    num_of_black = int(options.black_ratio * grid_size / 100)
+    num_of_black = int(math.ceil(options.black_ratio * grid_size / 100))
     for i in range(0, num_of_black):
         while True:
             x, y = random.randint(0, GRID_LEN-1), random.randint(0, GRID_LEN-1)
@@ -239,7 +238,7 @@ def check_survivability(grid, pollution, toxicity):
     # dealing with age, death and reproduce of daisies
     for i, j in get_random_queue():
         patch_type, patch_temp, patch_age = grid[i][j]
-        if patch_age == -1:
+        if patch_age == -1
             continue
         if patch_type != "empty":
             if pollution != 0:
@@ -269,7 +268,7 @@ def check_survivability(grid, pollution, toxicity):
                             temp = grid[i + diff_i][j + diff_j][1]
                             # age of new babies will be inited afterwards
                             grid[i + diff_i][j + diff_j] = (patch_type, temp, -1)
-  
+                            break
     # give new babies an age of 0
     for i in range(0, GRID_LEN):
         for j in range(0, GRID_LEN):
